@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { agent } from '@/lib/agent/singleton';
 import { getAvailableProviders } from '@/lib/providers';
+import { DEFAULT_SYSTEM_PROMPT } from '@/lib/agent/system-prompt';
 
 export async function GET() {
   return NextResponse.json({
@@ -37,7 +38,7 @@ export async function POST(req: NextRequest) {
       agent.setCustomAI({
         provider,
         apiKey,
-        systemPrompt: systemPrompt || 'You are a helpful crypto wallet assistant.',
+        systemPrompt: systemPrompt || DEFAULT_SYSTEM_PROMPT,
       });
     } else {
       return NextResponse.json(

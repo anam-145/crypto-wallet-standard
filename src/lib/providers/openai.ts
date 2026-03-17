@@ -3,6 +3,8 @@
  */
 
 const DEFAULT_MODEL = 'gpt-4o';
+const DEFAULT_TEMPERATURE = 0.1;
+const DEFAULT_MAX_TOKENS = 4096;
 const API_URL = 'https://api.openai.com/v1/chat/completions';
 
 interface ChatOptions {
@@ -32,6 +34,8 @@ export async function chat({ messages, tools, apiKey, systemPrompt, model }: Cha
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const body: any = {
     model: model || DEFAULT_MODEL,
+    temperature: DEFAULT_TEMPERATURE,
+    max_tokens: DEFAULT_MAX_TOKENS,
     messages: fullMessages,
   };
 

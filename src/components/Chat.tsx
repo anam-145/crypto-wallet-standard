@@ -16,9 +16,13 @@ interface Message {
 
 interface Props {
   selectedModules: string[];
+  connected: boolean;
+  onSessionEnd: () => void;
+  onRestart: () => void;
+  sessionDone: boolean;
 }
 
-export default function Chat({ selectedModules }: Props) {
+export default function Chat({ selectedModules, connected, onSessionEnd, onRestart, sessionDone }: Props) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -26,11 +30,11 @@ export default function Chat({ selectedModules }: Props) {
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+  }, [messages, loading]);
 
   async function handleSend() {
     const text = input.trim();
-    if (!text || loading) return;
+    if (!text || loading || !connected || sessionDone) return;
 
     setInput('');
     setMessages([{ role: 'user', content: text }]);
@@ -50,86 +54,239 @@ export default function Chat({ selectedModules }: Props) {
           prev[0],
           { role: 'assistant', content: `Error: ${data.error}` },
         ]);
-        return;
+      } else {
+        setMessages((prev) => [
+          prev[0],
+          { role: 'assistant', content: data.message, toolsUsed: data.toolsUsed },
+        ]);
       }
 
-      setMessages((prev) => [
-        prev[0],
-        { role: 'assistant', content: data.message, toolsUsed: data.toolsUsed },
-      ]);
+      onSessionEnd();
     } catch (error) {
       setMessages((prev) => [
         prev[0],
         { role: 'assistant', content: `Error: ${(error as Error).message}` },
       ]);
+      onSessionEnd();
     } finally {
       setLoading(false);
     }
   }
 
+  function handleRestart() {
+    setMessages([]);
+    setInput('');
+    onRestart();
+  }
+
   return (
-    <div className="flex flex-col h-full">
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {messages.length === 0 && (
-          <p className="text-gray-500 text-center mt-20">Send a message to start</p>
+    <>
+      {/* Chat Messages */}
+      <div style={{
+        flex: 1,
+        overflowY: 'auto',
+        padding: '20px 24px',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 16,
+      }}>
+        {messages.length === 0 && !loading && (
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <span style={{ color: '#555', fontSize: 14 }}>Send a message to start</span>
+          </div>
         )}
+
         {messages.map((msg, i) => (
           <div
             key={i}
-            className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+            style={{
+              maxWidth: '85%',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 4,
+              alignSelf: msg.role === 'user' ? 'flex-end' : 'flex-start',
+            }}
           >
-            <div
-              className={`max-w-[80%] px-4 py-2 rounded-2xl text-sm whitespace-pre-wrap ${
-                msg.role === 'user'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-gray-800 text-gray-200'
-              }`}
-            >
+            <span style={{
+              fontSize: 11,
+              color: '#666',
+              padding: '0 4px',
+              textAlign: msg.role === 'user' ? 'right' : 'left',
+            }}>
+              {msg.role === 'user' ? 'You' : 'Agent'}
+            </span>
+            <div style={{
+              padding: '10px 14px',
+              borderRadius: 16,
+              ...(msg.role === 'user'
+                ? { background: '#4f8fff', color: '#fff', borderBottomRightRadius: 4 }
+                : { background: '#1e1e1e', color: '#e5e5e5', borderBottomLeftRadius: 4 }),
+              fontSize: 14,
+              lineHeight: 1.5,
+              wordBreak: 'break-word',
+              overflowWrap: 'break-word',
+              whiteSpace: 'pre-wrap',
+            }}>
               {msg.content}
-              {msg.toolsUsed && msg.toolsUsed.length > 0 && (
-                <div className="mt-2 pt-2 border-t border-gray-700 space-y-1">
-                  {msg.toolsUsed.map((t, j) => (
-                    <div key={j} className="text-xs text-gray-400">
-                      {t.success ? '>' : 'x'} {t.name} ({t.responseTime}ms)
-                    </div>
-                  ))}
-                </div>
-              )}
             </div>
+
+            {/* Tool badges */}
+            {msg.toolsUsed && msg.toolsUsed.length > 0 && (
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 4 }}>
+                {msg.toolsUsed.map((t, j) => (
+                  <div key={j} style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 4,
+                    padding: '3px 8px',
+                    borderRadius: 6,
+                    background: '#161616',
+                    border: '1px solid #2a2a2a',
+                    fontSize: 11,
+                    color: '#888',
+                    width: 'fit-content',
+                  }}>
+                    <div style={{
+                      width: 6,
+                      height: 6,
+                      borderRadius: '50%',
+                      background: t.success ? '#34d399' : '#f87171',
+                    }} />
+                    {t.name} ({t.responseTime}ms)
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         ))}
+
+        {/* Loading dots */}
         {loading && (
-          <div className="flex justify-start">
-            <div className="bg-gray-800 text-gray-400 px-4 py-2 rounded-2xl text-sm">
-              Thinking...
+          <div style={{
+            maxWidth: '85%',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 4,
+            alignSelf: 'flex-start',
+          }}>
+            <span style={{ fontSize: 11, color: '#666', padding: '0 4px' }}>Agent</span>
+            <div style={{
+              padding: '12px 18px',
+              borderRadius: 16,
+              borderBottomLeftRadius: 4,
+              background: '#1e1e1e',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 3,
+            }}>
+              {[0, 1, 2].map((i) => (
+                <span key={i} style={{
+                  display: 'inline-block',
+                  width: 5,
+                  height: 5,
+                  borderRadius: '50%',
+                  background: '#666',
+                  animation: 'dot-pulse 1.2s ease-in-out infinite',
+                  animationDelay: `${i * 0.2}s`,
+                }} />
+              ))}
             </div>
           </div>
         )}
+
         <div ref={bottomRef} />
       </div>
 
-      {/* Input */}
-      <div className="border-t border-gray-800 p-4">
-        <div className="flex gap-2">
-          <input
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSend()}
-            placeholder="Ask about your wallet..."
-            disabled={loading}
-            className="flex-1 px-4 py-2 bg-gray-800 border border-gray-700 rounded-xl text-gray-200 placeholder-gray-500 focus:outline-none focus:border-blue-500 disabled:opacity-50"
-          />
+      {/* Input Area or Restart Button */}
+      {sessionDone ? (
+        <div style={{
+          padding: '16px 24px 24px',
+          borderTop: '1px solid #1a1a1a',
+          display: 'flex',
+          justifyContent: 'center',
+        }}>
           <button
-            onClick={handleSend}
-            disabled={loading || !input.trim()}
-            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 disabled:text-gray-500 text-white rounded-xl transition-colors"
+            onClick={handleRestart}
+            style={{
+              padding: '10px 28px',
+              borderRadius: 24,
+              border: '1px solid #333',
+              background: '#1a1a1a',
+              color: '#e5e5e5',
+              fontSize: 14,
+              cursor: 'pointer',
+              transition: 'all 0.15s',
+            }}
+            onMouseEnter={(e) => {
+              const el = e.target as HTMLElement;
+              el.style.borderColor = '#4f8fff';
+              el.style.background = 'rgba(79, 143, 255, 0.1)';
+              el.style.color = '#4f8fff';
+            }}
+            onMouseLeave={(e) => {
+              const el = e.target as HTMLElement;
+              el.style.borderColor = '#333';
+              el.style.background = '#1a1a1a';
+              el.style.color = '#e5e5e5';
+            }}
           >
-            Send
+            New Conversation
           </button>
         </div>
-      </div>
-    </div>
+      ) : (
+        <div style={{ padding: '16px 24px 24px', borderTop: '1px solid #1a1a1a' }}>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+            padding: '4px 4px 4px 16px',
+            background: '#1a1a1a',
+            border: '1px solid #2a2a2a',
+            borderRadius: 24,
+            opacity: connected ? 1 : 0.4,
+            pointerEvents: connected ? 'auto' : 'none',
+            transition: 'border-color 0.15s',
+          }}>
+            <input
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSend()}
+              placeholder={connected ? 'Enter your message...' : 'Connect first to start'}
+              disabled={!connected || loading}
+              style={{
+                flex: 1,
+                background: 'none',
+                border: 'none',
+                outline: 'none',
+                color: '#e5e5e5',
+                fontSize: 14,
+              }}
+            />
+            <button
+              onClick={handleSend}
+              disabled={!connected || loading || !input.trim()}
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: '50%',
+                border: 'none',
+                background: connected && input.trim() && !loading ? '#4f8fff' : '#333',
+                cursor: connected && input.trim() && !loading ? 'pointer' : 'not-allowed',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+                transition: 'background 0.15s',
+              }}
+            >
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path d="M14 2L7 9M14 2L9.5 14L7 9M14 2L2 6.5L7 9" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      )}
+    </>
   );
 }

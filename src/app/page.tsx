@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Chat from '@/components/Chat';
 import ModuleSelector from '@/components/ModuleSelector';
 import SettingsPanel from '@/components/SettingsPanel';
+import StatusBar from '@/components/StatusBar';
 
 interface Module {
   id: string;
@@ -18,7 +19,10 @@ export default function Home() {
   const [modules, setModules] = useState<Module[]>([]);
   const [selectedModules, setSelectedModules] = useState<string[]>([]);
   const [mode, setMode] = useState<Mode>('default');
+  const [connected, setConnected] = useState(false);
   const [availableProviders, setAvailableProviders] = useState<string[]>([]);
+  const [sessionDone, setSessionDone] = useState(false);
+  const [connectedDetail, setConnectedDetail] = useState('');
 
   useEffect(() => {
     fetch('/api/modules')
@@ -33,6 +37,10 @@ export default function Home() {
       .then((data) => {
         setMode(data.mode);
         setAvailableProviders(data.availableProviders || []);
+        if (data.mode === 'default') {
+          setConnected(true);
+          setConnectedDetail('Anam Agent Server');
+        }
       });
   }, []);
 
@@ -40,6 +48,23 @@ export default function Home() {
     setSelectedModules((prev) =>
       prev.includes(id) ? prev.filter((m) => m !== id) : [...prev, id],
     );
+  }
+
+  function handleModeChange(newMode: Mode) {
+    setMode(newMode);
+    if (newMode === 'default') {
+      // Anam mode: auto-connect + reset server
+      fetch('/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mode: 'default' }),
+      });
+      setConnected(true);
+      setConnectedDetail('Anam Agent Server');
+    } else {
+      setConnected(false);
+      setConnectedDetail('');
+    }
   }
 
   async function handleApplySettings(settings: Record<string, string>) {
@@ -51,33 +76,68 @@ export default function Home() {
     const data = await res.json();
     if (res.ok) {
       setMode(data.mode);
+      setConnected(true);
+      if (settings.mode === 'custom-url') {
+        setConnectedDetail(settings.chatUrl);
+      } else if (settings.mode === 'custom-ai') {
+        const providerName = (settings.provider || 'openai').charAt(0).toUpperCase() + (settings.provider || 'openai').slice(1);
+        setConnectedDetail(`${providerName} Direct`);
+      }
     }
   }
 
   return (
-    <div className="flex h-screen bg-gray-900 text-gray-100">
-      {/* Sidebar */}
-      <aside className="w-72 border-r border-gray-800 p-4 flex flex-col gap-6 overflow-y-auto">
-        <h1 className="text-lg font-bold">Crypto Wallet Agent</h1>
-        <div className="text-xs text-gray-500">
-          Mode: <span className="text-gray-300">{mode}</span>
-        </div>
+    <div style={{
+      width: '100%',
+      maxWidth: 480,
+      height: '100vh',
+      maxHeight: 760,
+      display: 'flex',
+      flexDirection: 'column',
+      background: '#111',
+      borderRadius: 16,
+      overflow: 'hidden',
+      border: '1px solid #222',
+    }}>
+      {/* Header */}
+      <div style={{
+        padding: '20px 24px 16px',
+        borderBottom: '1px solid #1a1a1a',
+      }}>
+        <h1 style={{ fontSize: 18, fontWeight: 600, color: '#fff', marginBottom: 16 }}>
+          Crypto Wallet Agent
+        </h1>
         <SettingsPanel
           currentMode={mode}
+          onModeChange={handleModeChange}
           onApply={handleApplySettings}
           availableProviders={availableProviders}
         />
-        <ModuleSelector
-          modules={modules}
-          selected={selectedModules}
-          onToggle={handleToggle}
-        />
-      </aside>
+      </div>
+
+      {/* Modules */}
+      <ModuleSelector
+        modules={modules}
+        selected={selectedModules}
+        onToggle={handleToggle}
+        disabled={sessionDone}
+      />
+
+      {/* Status Bar */}
+      <StatusBar
+        mode={mode}
+        connected={connected}
+        connectedDetail={connectedDetail}
+      />
 
       {/* Chat */}
-      <main className="flex-1 flex flex-col">
-        <Chat selectedModules={selectedModules} />
-      </main>
+      <Chat
+        selectedModules={selectedModules}
+        connected={connected}
+        sessionDone={sessionDone}
+        onSessionEnd={() => setSessionDone(true)}
+        onRestart={() => setSessionDone(false)}
+      />
     </div>
   );
 }
