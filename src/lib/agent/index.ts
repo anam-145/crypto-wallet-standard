@@ -65,7 +65,7 @@ interface CustomAIConfig {
 export class Agent {
   private defaultChatUrl: string;
   chatUrl: string;
-  mode: 'default' | 'custom-ai';
+  mode: 'default' | 'custom-url' | 'custom-ai';
   private customAI: CustomAIConfig | null;
 
   constructor(options: AgentOptions = {}) {
@@ -76,7 +76,7 @@ export class Agent {
   }
 
   setChatUrl(url: string | null) {
-    this.mode = 'default';
+    this.mode = url ? 'custom-url' : 'default';
     this.customAI = null;
     this.chatUrl = url || this.defaultChatUrl;
   }
