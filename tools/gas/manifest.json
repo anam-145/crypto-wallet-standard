@@ -2,29 +2,29 @@
   "name": "Gas",
   "aiTools": {
     "enabled": true,
-    "description": "멀티체인 가스비 조회 및 비교 도구. Ethereum, Base의 실시간 가스비를 조회하고 최적의 체인을 추천합니다. USD 환산 포함. 사용자가 '가스비 얼마야', '어느 체인이 싸?', '지금 이더리움 수수료', '트랜잭션 비용 비교' 등을 물으면 이 도구를 사용하세요.",
+    "description": "Multi-chain gas fee query and comparison tool. Get real-time gas prices for Ethereum and Base, with USD conversion and optimal chain recommendation. Use when the user asks about gas fees, transaction costs, or which chain is cheaper.",
     "actions": [
       {
         "name": "getAllGasPrices",
-        "description": "모든 체인(Ethereum, Base)의 가스비를 한번에 조회합니다. USD 환산 포함. 사용자가 '전체 가스비', '모든 체인 수수료' 등을 물으면 사용.",
+        "description": "Get gas prices for all chains (Ethereum, Base) at once, including USD conversion. Use when the user asks about overall gas fees or all chain fees.",
         "input": { "type": "object", "properties": {} },
         "output": {
           "type": "object",
           "properties": {
-            "ethereum": { "type": "object", "description": "Ethereum 가스비 정보" },
-            "base": { "type": "object", "description": "Base 가스비 정보" },
+            "ethereum": { "type": "object", "description": "Ethereum gas fee info" },
+            "base": { "type": "object", "description": "Base gas fee info" },
             "timestamp": { "type": "string" }
           }
         }
       },
       {
         "name": "getChainGas",
-        "description": "특정 체인의 가스비를 조회합니다. 사용자가 '이더리움 가스비', 'Base 수수료' 등을 물으면 사용.",
+        "description": "Get gas price for a specific chain. Use when the user asks about Ethereum gas or Base fees.",
         "input": {
           "type": "object",
           "required": ["chain"],
           "properties": {
-            "chain": { "type": "string", "enum": ["ethereum", "base"], "description": "조회할 체인" }
+            "chain": { "type": "string", "enum": ["ethereum", "base"], "description": "Chain to query" }
           }
         },
         "output": {
@@ -33,17 +33,17 @@
             "chain": { "type": "string" },
             "gasPriceGwei": { "type": "string" },
             "ethPriceUSD": { "type": "number" },
-            "estimates": { "type": "object", "description": "작업별 예상 수수료" }
+            "estimates": { "type": "object", "description": "Estimated fees by operation type" }
           }
         }
       },
       {
         "name": "compareGas",
-        "description": "Ethereum과 Base의 특정 작업 가스비를 비교합니다. 사용자가 '어느 체인이 싸', '가스비 비교' 등을 물으면 사용.",
+        "description": "Compare gas fees between Ethereum and Base for a specific operation. Use when the user asks which chain is cheaper or wants a fee comparison.",
         "input": {
           "type": "object",
           "properties": {
-            "operation": { "type": "string", "enum": ["transfer", "swap"], "description": "비교할 작업 유형 (기본: transfer)" }
+            "operation": { "type": "string", "enum": ["transfer", "swap"], "description": "Operation type to compare (default: transfer)" }
           }
         },
         "output": {
@@ -58,12 +58,12 @@
       },
       {
         "name": "recommendChain",
-        "description": "거래 금액과 작업 유형을 고려하여 최적의 체인을 추천합니다. 사용자가 '어디서 하는게 나아', '추천해줘' 등을 물으면 사용.",
+        "description": "Recommend the optimal chain considering transaction amount and operation type. Use when the user asks for a recommendation or which chain is better.",
         "input": {
           "type": "object",
           "properties": {
-            "operation": { "type": "string", "enum": ["transfer", "swap"], "description": "작업 유형 (기본: transfer)" },
-            "amount": { "type": "string", "description": "거래 금액 ETH (기본: 1)" }
+            "operation": { "type": "string", "enum": ["transfer", "swap"], "description": "Operation type (default: transfer)" },
+            "amount": { "type": "string", "description": "Transaction amount in ETH (default: 1)" }
           }
         },
         "output": {

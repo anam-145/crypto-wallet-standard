@@ -1,7 +1,7 @@
 /**
- * Discovery - 도구 자동 발견
+ * Discovery - Auto-discover tool modules
  *
- * tools/ 폴더를 스캔하여 manifest.json 파일들을 로드합니다.
+ * Scans the tools/ directory and loads manifest.json files.
  */
 
 import fs from 'fs';
@@ -30,14 +30,18 @@ export interface Manifest {
   };
 }
 
+let cachedManifests: Manifest[] | null = null;
+
 /**
- * tools 폴더의 모든 manifest.json을 스캔
+ * Scan all manifest.json files in tools/ directory (cached)
  */
 export function discoverTools(): Manifest[] {
+  if (cachedManifests) return cachedManifests;
+
   const manifests: Manifest[] = [];
 
   if (!fs.existsSync(TOOLS_DIR)) {
-    console.warn(`[Discovery] tools 폴더가 없습니다: ${TOOLS_DIR}`);
+    console.warn(`[Discovery] tools directory not found: ${TOOLS_DIR}`);
     return manifests;
   }
 
@@ -58,10 +62,11 @@ export function discoverTools(): Manifest[] {
           manifests.push(manifest);
         }
       } catch (error) {
-        console.error(`[Discovery] manifest 파싱 실패: ${manifestPath}`, (error as Error).message);
+        console.error(`[Discovery] Failed to parse manifest: ${manifestPath}`, (error as Error).message);
       }
     }
   }
 
+  cachedManifests = manifests;
   return manifests;
 }

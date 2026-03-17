@@ -2,76 +2,76 @@
   "name": "Swap",
   "aiTools": {
     "enabled": true,
-    "description": "Uniswap V3를 통한 토큰 스왑 도구. ETH, USDC 등 교환 가능. 4개 풀(0.01%, 0.05%, 0.3%, 1%)을 비교하여 최적 경로 자동 선택. 사용자가 'ETH를 USDC로 바꿔줘', '스왑 견적', '환율 알려줘' 등을 요청하면 이 도구를 사용하세요.",
+    "description": "Token swap tool via Uniswap V3. Supports ETH, USDC and other tokens. Compares 4 fee tiers (0.01%, 0.05%, 0.3%, 1%) and auto-selects the optimal pool. Use when the user asks to swap tokens, get a quote, or check exchange rates.",
     "actions": [
       {
         "name": "quote",
-        "description": "토큰 스왑 견적을 조회합니다. 4개의 Uniswap V3 풀을 비교하여 가장 좋은 출력을 주는 풀을 자동 선택합니다. 사용자가 '스왑 견적', '환율', '얼마 받을 수 있어' 등을 물으면 사용.",
+        "description": "Get a swap quote. Compares all 4 Uniswap V3 fee tiers and auto-selects the pool with the best output. Use when the user asks for a swap quote, exchange rate, or expected output.",
         "input": {
           "type": "object",
           "required": ["chain", "tokenIn", "tokenOut", "amount"],
           "properties": {
-            "chain": { "type": "string", "enum": ["ethereum", "base"], "description": "스왑을 실행할 체인" },
-            "tokenIn": { "type": "string", "description": "교환할 토큰 (ETH, WETH, USDC 또는 토큰 주소)" },
-            "tokenOut": { "type": "string", "description": "받을 토큰" },
-            "amount": { "type": "string", "description": "교환할 수량" }
+            "chain": { "type": "string", "enum": ["ethereum", "base"], "description": "Chain to execute the swap on" },
+            "tokenIn": { "type": "string", "description": "Token to swap from (ETH, WETH, USDC, or token address)" },
+            "tokenOut": { "type": "string", "description": "Token to receive" },
+            "amount": { "type": "string", "description": "Amount to swap" }
           }
         },
         "output": {
           "type": "object",
           "properties": {
-            "amountOut": { "type": "string", "description": "받을 예상 수량" },
-            "rate": { "type": "string", "description": "환율" },
-            "gasFee": { "type": "string", "description": "예상 가스비 (ETH)" },
-            "bestPool": { "type": "object", "description": "최적 풀 정보" },
-            "allPools": { "type": "array", "description": "모든 풀 비교 결과" }
+            "amountOut": { "type": "string", "description": "Expected output amount" },
+            "rate": { "type": "string", "description": "Exchange rate" },
+            "gasFee": { "type": "string", "description": "Estimated gas fee (ETH)" },
+            "bestPool": { "type": "object", "description": "Best pool info" },
+            "allPools": { "type": "array", "description": "Comparison of all pools" }
           }
         }
       },
       {
         "name": "compare",
-        "description": "Ethereum과 Base 체인에서 동일한 스왑의 견적을 비교합니다. 어느 체인이 더 유리한지 추천합니다. 사용자가 '어느 체인이 나아', '비교해줘' 등을 물으면 사용.",
+        "description": "Compare swap quotes between Ethereum and Base for the same pair. Recommends the more favorable chain. Use when the user asks which chain is better for a swap.",
         "input": {
           "type": "object",
           "required": ["tokenIn", "tokenOut", "amount"],
           "properties": {
-            "tokenIn": { "type": "string", "description": "교환할 토큰" },
-            "tokenOut": { "type": "string", "description": "받을 토큰" },
-            "amount": { "type": "string", "description": "교환할 수량" }
+            "tokenIn": { "type": "string", "description": "Token to swap from" },
+            "tokenOut": { "type": "string", "description": "Token to receive" },
+            "amount": { "type": "string", "description": "Amount to swap" }
           }
         },
         "output": {
           "type": "object",
           "properties": {
-            "ethereum": { "type": "object", "description": "Ethereum 견적" },
-            "base": { "type": "object", "description": "Base 견적" },
-            "recommendation": { "type": "string", "description": "추천 체인" },
-            "reason": { "type": "string", "description": "추천 이유" }
+            "ethereum": { "type": "object", "description": "Ethereum quote" },
+            "base": { "type": "object", "description": "Base quote" },
+            "recommendation": { "type": "string", "description": "Recommended chain" },
+            "reason": { "type": "string", "description": "Recommendation reason" }
           }
         }
       },
       {
         "name": "execute",
-        "description": "토큰 스왑을 실행합니다. 실제 트랜잭션을 전송하여 토큰을 교환합니다. 사용자가 '스왑해줘', '교환 실행', 'ETH를 USDC로 바꿔줘' 등을 요청하면 사용.",
+        "description": "Execute a token swap. Sends an actual transaction to exchange tokens. Use when the user explicitly requests to perform a swap.",
         "input": {
           "type": "object",
           "required": ["chain", "tokenIn", "tokenOut", "amountIn"],
           "properties": {
-            "chain": { "type": "string", "enum": ["ethereum", "base"], "description": "스왑을 실행할 체인" },
-            "tokenIn": { "type": "string", "description": "교환할 토큰 (ETH, USDC)" },
-            "tokenOut": { "type": "string", "description": "받을 토큰" },
-            "amountIn": { "type": "string", "description": "교환할 수량" },
-            "slippage": { "type": "number", "description": "슬리피지 허용치 (기본 0.5%)" }
+            "chain": { "type": "string", "enum": ["ethereum", "base"], "description": "Chain to execute the swap on" },
+            "tokenIn": { "type": "string", "description": "Token to swap from (ETH, USDC)" },
+            "tokenOut": { "type": "string", "description": "Token to receive" },
+            "amountIn": { "type": "string", "description": "Amount to swap" },
+            "slippage": { "type": "number", "description": "Slippage tolerance (default: 0.5%)" }
           }
         },
         "output": {
           "type": "object",
           "properties": {
-            "txHash": { "type": "string", "description": "트랜잭션 해시" },
-            "explorerUrl": { "type": "string", "description": "블록 탐색기 링크" },
-            "status": { "type": "string", "description": "트랜잭션 상태 (success/failed)" },
-            "amountIn": { "type": "string", "description": "교환한 수량" },
-            "amountOut": { "type": "string", "description": "받은 수량" }
+            "txHash": { "type": "string", "description": "Transaction hash" },
+            "explorerUrl": { "type": "string", "description": "Block explorer link" },
+            "status": { "type": "string", "description": "Transaction status (success/failed)" },
+            "amountIn": { "type": "string", "description": "Amount swapped" },
+            "amountOut": { "type": "string", "description": "Amount received" }
           }
         }
       }

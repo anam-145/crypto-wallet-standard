@@ -2,28 +2,28 @@
   "name": "Base Wallet",
   "aiTools": {
     "enabled": true,
-    "description": "Base L2 지갑 도구. Base 체인의 ETH 잔액, ERC-20 토큰 조회, USDC 잔액 확인. L2라서 가스비가 저렴합니다. 사용자가 'Base 잔액', 'L2 잔액', 'Base USDC' 등을 물으면 이 도구를 사용하세요.",
+    "description": "Base L2 wallet tool. Query ETH balance, ERC-20 tokens, and USDC balance on Base chain. Gas fees are significantly cheaper on L2. Use this tool when the user asks about Base balance, L2 holdings, or Base USDC.",
     "actions": [
       {
         "name": "getAddress",
-        "description": "현재 사용자의 Base 지갑 주소를 조회합니다. 잔액이나 토큰 조회 전에 주소가 필요하면 먼저 이 함수를 호출하세요.",
+        "description": "Get the current user's Base wallet address. Call this first if an address is needed before querying balances or tokens.",
         "input": { "type": "object", "properties": {} },
         "output": {
           "type": "object",
           "properties": {
-            "address": { "type": "string", "description": "Base 지갑 주소 (0x...)" },
+            "address": { "type": "string", "description": "Base wallet address (0x...)" },
             "chain": { "type": "string" }
           }
         }
       },
       {
         "name": "getBalance",
-        "description": "Base 지갑의 ETH 잔액을 조회합니다. 사용자가 'Base 잔액', 'L2 잔액', 'Base ETH' 등을 물으면 사용.",
+        "description": "Get the ETH balance on Base chain. Use when the user asks about Base balance or L2 ETH holdings.",
         "input": {
           "type": "object",
           "required": ["address"],
           "properties": {
-            "address": { "type": "string", "description": "Base 지갑 주소 (0x...)" }
+            "address": { "type": "string", "description": "Base wallet address (0x...)" }
           }
         },
         "output": {
@@ -38,13 +38,13 @@
       },
       {
         "name": "getTokenBalance",
-        "description": "Base에서 특정 ERC-20 토큰의 잔액을 조회합니다.",
+        "description": "Get the balance of a specific ERC-20 token on Base.",
         "input": {
           "type": "object",
           "required": ["address", "tokenAddress"],
           "properties": {
-            "address": { "type": "string", "description": "지갑 주소" },
-            "tokenAddress": { "type": "string", "description": "토큰 컨트랙트 주소" }
+            "address": { "type": "string", "description": "Wallet address" },
+            "tokenAddress": { "type": "string", "description": "Token contract address" }
           }
         },
         "output": {
@@ -58,12 +58,12 @@
       },
       {
         "name": "getUSDCBalance",
-        "description": "Base의 USDC 잔액을 조회합니다. 사용자가 'Base USDC', 'L2 USDC 잔액' 등을 물으면 사용.",
+        "description": "Get the USDC balance on Base. Use when the user asks about Base USDC or L2 USDC holdings.",
         "input": {
           "type": "object",
           "required": ["address"],
           "properties": {
-            "address": { "type": "string", "description": "지갑 주소" }
+            "address": { "type": "string", "description": "Wallet address" }
           }
         },
         "output": {
@@ -76,12 +76,12 @@
       },
       {
         "name": "getOwnedTokens",
-        "description": "Base 지갑이 보유한 모든 토큰 목록을 조회합니다.",
+        "description": "Get a list of all tokens held by the Base wallet.",
         "input": {
           "type": "object",
           "required": ["address"],
           "properties": {
-            "address": { "type": "string", "description": "지갑 주소" }
+            "address": { "type": "string", "description": "Wallet address" }
           }
         },
         "output": {
@@ -94,7 +94,7 @@
       },
       {
         "name": "getGasPrice",
-        "description": "Base의 현재 가스 가격을 조회합니다. L2라서 매우 저렴합니다.",
+        "description": "Get the current gas price on Base. Very cheap compared to L1.",
         "input": { "type": "object", "properties": {} },
         "output": {
           "type": "object",
@@ -106,7 +106,7 @@
       },
       {
         "name": "estimateGas",
-        "description": "Base에서 ETH 전송에 필요한 가스비를 예측합니다.",
+        "description": "Estimate the gas fee for an ETH transfer on Base.",
         "input": {
           "type": "object",
           "required": ["from", "to", "amount"],
@@ -126,7 +126,7 @@
       },
       {
         "name": "getTransactionStatus",
-        "description": "Base 트랜잭션 상태를 확인합니다.",
+        "description": "Get the status of a Base transaction.",
         "input": {
           "type": "object",
           "required": ["txHash"],
@@ -137,7 +137,7 @@
         "output": {
           "type": "object",
           "properties": {
-            "status": { "type": "string", "description": "상태 (confirmed/failed/pending)" },
+            "status": { "type": "string", "description": "Status (confirmed/failed/pending)" },
             "confirmations": { "type": "number" }
           }
         }

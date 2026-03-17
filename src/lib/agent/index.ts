@@ -1,7 +1,7 @@
 /**
- * AI Agent - 메인 모듈
+ * AI Agent - Main module
  *
- * 도구 발견 → 백엔드 API 호출 → 로컬 도구 실행 루프
+ * Tool discovery → Backend API call → Local tool execution loop
  */
 
 import fs from 'fs';
@@ -12,8 +12,6 @@ import { executeTool } from './executor';
 import { getProvider } from '../providers';
 
 const LOGS_DIR = path.join(process.cwd(), 'logs');
-
-if (!fs.existsSync(LOGS_DIR)) fs.mkdirSync(LOGS_DIR, { recursive: true });
 
 class FileLogger {
   private lines: string[] = [];
@@ -31,6 +29,7 @@ class FileLogger {
 
   save() {
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    if (!fs.existsSync(LOGS_DIR)) fs.mkdirSync(LOGS_DIR, { recursive: true });
     const filePath = path.join(LOGS_DIR, `${timestamp}.log`);
     fs.writeFileSync(filePath, this.lines.join('\n'), 'utf-8');
     console.log(`[Agent] Log saved: logs/${path.basename(filePath)}`);
@@ -39,7 +38,7 @@ class FileLogger {
 
 const MAX_ITERATIONS = 20;
 
-// TODO: 추후 인증 시스템 연동 시 동적으로 변경
+// TODO: Replace with dynamic value when auth system is integrated
 const USER_UNIQUE_VALUE = 'user_001';
 
 interface ToolUsed {

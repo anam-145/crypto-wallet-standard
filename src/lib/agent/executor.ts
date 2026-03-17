@@ -1,9 +1,10 @@
 /**
- * Executor - 도구 로컬 실행
+ * Executor - Local tool execution
  *
- * tools/{name}/index.js를 동적 import하여 실행합니다.
+ * Dynamically imports and executes tools/{name}/index.js.
  */
 
+import path from 'path';
 import { parseFunctionName } from './converter';
 import { discoverTools } from './discovery';
 
@@ -20,13 +21,14 @@ export interface ToolResult {
 }
 
 /**
- * 도구 동적 로드
+ * Dynamically load a tool module
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function loadTool(toolDir: string): Promise<any> {
   if (!toolInstances[toolDir]) {
     try {
-      const module = await import(`../../../../tools/${toolDir}/index.js`);
+      const toolPath = path.join(process.cwd(), 'tools', toolDir, 'index.js');
+      const module = await import(toolPath);
       toolInstances[toolDir] = module.default;
     } catch (error) {
       throw new Error(`Failed to load tool: ${toolDir} - ${(error as Error).message}`);
@@ -36,7 +38,7 @@ async function loadTool(toolDir: string): Promise<any> {
 }
 
 /**
- * 도구 실행
+ * Execute a tool action
  */
 export async function executeTool(functionName: string, args: Record<string, unknown>): Promise<ToolResult> {
   const startTime = Date.now();
@@ -61,7 +63,7 @@ export async function executeTool(functionName: string, args: Record<string, unk
 }
 
 /**
- * manifest의 input.properties 키 순서 기준으로 args를 정렬
+ * Order args by manifest input.properties key order
  */
 function getOrderedArgs(toolDir: string, actionName: string, args: Record<string, unknown>): unknown[] {
   if (!args || Object.keys(args).length === 0) return [];

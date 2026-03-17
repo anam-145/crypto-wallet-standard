@@ -1,5 +1,5 @@
 /**
- * Converter - Manifest를 OpenAI Tools 형식으로 변환
+ * Converter - Transform Manifest to OpenAI Tools format
  */
 
 import type { Manifest } from './discovery';
@@ -14,7 +14,7 @@ export interface OpenAITool {
 }
 
 /**
- * Manifest 배열을 OpenAI tools 형식으로 변환
+ * Convert Manifest array to OpenAI tools format
  */
 export function convertToOpenAITools(manifests: Manifest[]): OpenAITool[] {
   const tools: OpenAITool[] = [];
@@ -39,7 +39,7 @@ export function convertToOpenAITools(manifests: Manifest[]): OpenAITool[] {
 }
 
 /**
- * function name에서 toolDir와 action 추출
+ * Extract toolDir and action from function name
  */
 export function parseFunctionName(functionName: string): { toolDir: string; action: string } {
   const lastUnderscoreIndex = functionName.lastIndexOf('_');

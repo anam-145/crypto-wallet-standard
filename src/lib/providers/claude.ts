@@ -1,7 +1,7 @@
 /**
  * Claude Provider - Direct API Call
  *
- * TODO: Anthropic Messages API 연동
+ * TODO: Integrate Anthropic Messages API
  * https://docs.anthropic.com/en/docs/build-with-claude/tool-use
  */
 
