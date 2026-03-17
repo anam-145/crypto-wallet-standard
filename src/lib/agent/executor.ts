@@ -28,7 +28,7 @@ async function loadTool(toolDir: string): Promise<any> {
   if (!toolInstances[toolDir]) {
     try {
       const toolPath = path.join(process.cwd(), 'tools', toolDir, 'index.js');
-      const module = await import(toolPath);
+      const module = await import(/* webpackIgnore: true */ toolPath);
       toolInstances[toolDir] = module.default;
     } catch (error) {
       throw new Error(`Failed to load tool: ${toolDir} - ${(error as Error).message}`);
