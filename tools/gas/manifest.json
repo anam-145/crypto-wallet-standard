@@ -1,13 +1,5 @@
 {
-  "app_id": "com.anam.gas-tool",
-  "type": "app",
   "name": "Gas",
-  "version": "1.0.0",
-  "icon": "assets/icons/app_icon.png",
-  "pages": [
-    "pages/index/index"
-  ],
-
   "aiTools": {
     "enabled": true,
     "description": "멀티체인 가스비 조회 및 비교 도구. Ethereum, Base의 실시간 가스비를 조회하고 최적의 체인을 추천합니다. USD 환산 포함. 사용자가 '가스비 얼마야', '어느 체인이 싸?', '지금 이더리움 수수료', '트랜잭션 비용 비교' 등을 물으면 이 도구를 사용하세요.",
@@ -15,10 +7,7 @@
       {
         "name": "getAllGasPrices",
         "description": "모든 체인(Ethereum, Base)의 가스비를 한번에 조회합니다. USD 환산 포함. 사용자가 '전체 가스비', '모든 체인 수수료' 등을 물으면 사용.",
-        "input": {
-          "type": "object",
-          "properties": {}
-        },
+        "input": { "type": "object", "properties": {} },
         "output": {
           "type": "object",
           "properties": {
@@ -35,11 +24,7 @@
           "type": "object",
           "required": ["chain"],
           "properties": {
-            "chain": {
-              "type": "string",
-              "enum": ["ethereum", "base"],
-              "description": "조회할 체인"
-            }
+            "chain": { "type": "string", "enum": ["ethereum", "base"], "description": "조회할 체인" }
           }
         },
         "output": {
@@ -58,12 +43,7 @@
         "input": {
           "type": "object",
           "properties": {
-            "operation": {
-              "type": "string",
-              "enum": ["transfer", "swap"],
-              "default": "transfer",
-              "description": "비교할 작업 유형"
-            }
+            "operation": { "type": "string", "enum": ["transfer", "swap"], "description": "비교할 작업 유형 (기본: transfer)" }
           }
         },
         "output": {
@@ -72,14 +52,7 @@
             "operation": { "type": "string" },
             "ethereum": { "type": "object" },
             "base": { "type": "object" },
-            "comparison": {
-              "type": "object",
-              "properties": {
-                "cheaperChain": { "type": "string" },
-                "savingsPercent": { "type": "string" },
-                "recommendation": { "type": "string" }
-              }
-            }
+            "comparison": { "type": "object" }
           }
         }
       },
@@ -89,29 +62,14 @@
         "input": {
           "type": "object",
           "properties": {
-            "operation": {
-              "type": "string",
-              "enum": ["transfer", "swap"],
-              "default": "transfer",
-              "description": "작업 유형"
-            },
-            "amount": {
-              "type": "string",
-              "default": "1",
-              "description": "거래 금액 (ETH)"
-            }
+            "operation": { "type": "string", "enum": ["transfer", "swap"], "description": "작업 유형 (기본: transfer)" },
+            "amount": { "type": "string", "description": "거래 금액 ETH (기본: 1)" }
           }
         },
         "output": {
           "type": "object",
           "properties": {
-            "recommendation": {
-              "type": "object",
-              "properties": {
-                "chain": { "type": "string", "description": "추천 체인" },
-                "reason": { "type": "string", "description": "추천 이유" }
-              }
-            }
+            "recommendation": { "type": "object" }
           }
         }
       }

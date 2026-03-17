@@ -4,6 +4,7 @@
  */
 
 import { ethers } from 'ethers';
+import axios from 'axios';
 import { getNetwork } from '../../config/networks.js';
 import { UNISWAP_QUOTER_ABI, UNISWAP_ROUTER_ABI, ERC20_ABI } from '../../config/contracts.js';
 import { getEthersWallet } from '../../utils/wallet.js';
@@ -122,6 +123,19 @@ class SwapTool {
     };
   }
 
+  async getEthPrice() {
+    try {
+      const response = await axios.get(
+        'https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd',
+        { timeout: 5000 }
+      );
+      return response.data.ethereum.usd;
+    } catch (error) {
+      console.warn('[Swap] ETH price fetch failed, using fallback:', error.message);
+      return 2000;
+    }
+  }
+
   async compare(tokenIn, tokenOut, amount) {
     const [ethereumQuote, baseQuote] = await Promise.all([
       this.quote('ethereum', tokenIn, tokenOut, amount),
@@ -130,8 +144,9 @@ class SwapTool {
 
     let recommendation = null;
     if (!ethereumQuote.error && !baseQuote.error) {
-      const ethNet = parseFloat(ethereumQuote.amountOut) - parseFloat(ethereumQuote.gasFee) * 2000;
-      const baseNet = parseFloat(baseQuote.amountOut) - parseFloat(baseQuote.gasFee) * 2000;
+      const ethPrice = await this.getEthPrice();
+      const ethNet = parseFloat(ethereumQuote.amountOut) - parseFloat(ethereumQuote.gasFee) * ethPrice;
+      const baseNet = parseFloat(baseQuote.amountOut) - parseFloat(baseQuote.gasFee) * ethPrice;
       recommendation = ethNet > baseNet ? 'ethereum' : 'base';
     }
 
@@ -174,10 +189,11 @@ class SwapTool {
       sqrtPriceLimitX96: 0
     };
 
-    const txOptions = tokenIn === 'ETH' ?
+    const isETH = tokenIn.toUpperCase() === 'ETH';
+    const txOptions = isETH ?
       { value: ethers.utils.parseEther(amountIn) } : {};
 
-    if (tokenIn !== 'ETH') {
+    if (!isETH) {
       await this.approveToken(wallet, tokenInAddress, config.router, amountIn);
     }
 

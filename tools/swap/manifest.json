@@ -1,13 +1,5 @@
 {
-  "app_id": "com.anam.swap-tool",
-  "type": "app",
   "name": "Swap",
-  "version": "1.0.0",
-  "icon": "assets/icons/app_icon.png",
-  "pages": [
-    "pages/index/index"
-  ],
-
   "aiTools": {
     "enabled": true,
     "description": "Uniswap V3를 통한 토큰 스왑 도구. ETH, USDC 등 교환 가능. 4개 풀(0.01%, 0.05%, 0.3%, 1%)을 비교하여 최적 경로 자동 선택. 사용자가 'ETH를 USDC로 바꿔줘', '스왑 견적', '환율 알려줘' 등을 요청하면 이 도구를 사용하세요.",
@@ -19,23 +11,10 @@
           "type": "object",
           "required": ["chain", "tokenIn", "tokenOut", "amount"],
           "properties": {
-            "chain": {
-              "type": "string",
-              "enum": ["ethereum", "base"],
-              "description": "스왑을 실행할 체인"
-            },
-            "tokenIn": {
-              "type": "string",
-              "description": "교환할 토큰 (ETH, WETH, USDC 또는 토큰 주소)"
-            },
-            "tokenOut": {
-              "type": "string",
-              "description": "받을 토큰"
-            },
-            "amount": {
-              "type": "string",
-              "description": "교환할 수량"
-            }
+            "chain": { "type": "string", "enum": ["ethereum", "base"], "description": "스왑을 실행할 체인" },
+            "tokenIn": { "type": "string", "description": "교환할 토큰 (ETH, WETH, USDC 또는 토큰 주소)" },
+            "tokenOut": { "type": "string", "description": "받을 토큰" },
+            "amount": { "type": "string", "description": "교환할 수량" }
           }
         },
         "output": {
@@ -44,19 +23,8 @@
             "amountOut": { "type": "string", "description": "받을 예상 수량" },
             "rate": { "type": "string", "description": "환율" },
             "gasFee": { "type": "string", "description": "예상 가스비 (ETH)" },
-            "bestPool": {
-              "type": "object",
-              "description": "최적 풀 정보",
-              "properties": {
-                "fee": { "type": "number" },
-                "feeLabel": { "type": "string" },
-                "reason": { "type": "string" }
-              }
-            },
-            "allPools": {
-              "type": "array",
-              "description": "모든 풀 비교 결과"
-            }
+            "bestPool": { "type": "object", "description": "최적 풀 정보" },
+            "allPools": { "type": "array", "description": "모든 풀 비교 결과" }
           }
         }
       },
@@ -89,11 +57,7 @@
           "type": "object",
           "required": ["chain", "tokenIn", "tokenOut", "amountIn"],
           "properties": {
-            "chain": {
-              "type": "string",
-              "enum": ["ethereum", "base"],
-              "description": "스왑을 실행할 체인"
-            },
+            "chain": { "type": "string", "enum": ["ethereum", "base"], "description": "스왑을 실행할 체인" },
             "tokenIn": { "type": "string", "description": "교환할 토큰 (ETH, USDC)" },
             "tokenOut": { "type": "string", "description": "받을 토큰" },
             "amountIn": { "type": "string", "description": "교환할 수량" },
@@ -105,7 +69,7 @@
           "properties": {
             "txHash": { "type": "string", "description": "트랜잭션 해시" },
             "explorerUrl": { "type": "string", "description": "블록 탐색기 링크" },
-            "status": { "type": "string", "description": "트랜잭션 상태" },
+            "status": { "type": "string", "description": "트랜잭션 상태 (success/failed)" },
             "amountIn": { "type": "string", "description": "교환한 수량" },
             "amountOut": { "type": "string", "description": "받은 수량" }
           }
