@@ -11,6 +11,8 @@ const providers: Record<string, { chat: (options: any) => Promise<any> }> = {
   claude,
 };
 
+const enabledProviders = ['openai'];
+
 export function getProvider(name: string) {
   const provider = providers[name];
   if (!provider) {
@@ -20,5 +22,5 @@ export function getProvider(name: string) {
 }
 
 export function getAvailableProviders(): string[] {
-  return Object.keys(providers);
+  return enabledProviders;
 }

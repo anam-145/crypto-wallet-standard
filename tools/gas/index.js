@@ -82,16 +82,18 @@ class GasTool {
 
     const ethCost = parseFloat(ethereumGas.estimates[operation]?.eth || '0');
     const baseCost = parseFloat(baseGas.estimates[operation]?.eth || '0');
-    const savings = ethCost > 0 ? ((ethCost - baseCost) / ethCost * 100).toFixed(2) : 0;
+    const savingsNum = ethCost > 0 ? (ethCost - baseCost) / ethCost * 100 : 0;
+    const cheaperChain = baseCost < ethCost ? 'base' : 'ethereum';
+    const savingsAbs = Math.abs(savingsNum).toFixed(2);
 
     return {
       operation,
       ethereum: ethereumGas.estimates[operation],
       base: baseGas.estimates[operation],
       comparison: {
-        cheaperChain: baseCost < ethCost ? 'base' : 'ethereum',
-        savingsPercent: `${savings}%`,
-        recommendation: `Use Base to save ${savings}% on gas`
+        cheaperChain,
+        savingsPercent: `${savingsAbs}%`,
+        recommendation: `Use ${cheaperChain === 'base' ? 'Base' : 'Ethereum'} to save ${savingsAbs}% on gas`
       }
     };
   }

@@ -169,7 +169,7 @@ export class Agent {
 
         console.log(`[Agent] ← finishReason: ${result.finishReason}`);
 
-        if (result.finishReason === 'stop') {
+        if (result.finishReason === 'stop' || result.finishReason === 'length') {
           console.log(`[Agent] Done. toolsUsed: ${toolsUsed.length}`);
           flog.log(`\n[Agent] Done. toolsUsed: ${toolsUsed.length}`);
           flog.save();
@@ -188,7 +188,13 @@ export class Agent {
           });
 
           for (const toolCall of result.toolCalls) {
-            const args = JSON.parse(toolCall.arguments);
+            let args: Record<string, unknown>;
+            try {
+              args = JSON.parse(toolCall.arguments);
+            } catch {
+              args = {};
+              console.warn(`[Agent] Failed to parse tool arguments for ${toolCall.name}, using empty args`);
+            }
 
             console.log(`[Agent] Tool Call: ${toolCall.name}(${JSON.stringify(args)})`);
             flog.log(`\n[Agent] Tool Exec: ${toolCall.name}`);

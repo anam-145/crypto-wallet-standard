@@ -14,7 +14,7 @@ interface ChatOptions {
 }
 
 interface ChatResult {
-  finishReason: 'stop' | 'tool_calls';
+  finishReason: 'stop' | 'tool_calls' | 'length';
   message: string | null;
   toolCalls: { id: string; name: string; arguments: string }[] | null;
 }
@@ -73,6 +73,14 @@ export async function chat({ messages, tools, apiKey, systemPrompt, model }: Cha
         name: tc.function.name,
         arguments: tc.function.arguments,
       })),
+    };
+  }
+
+  if (choice.finish_reason === 'length') {
+    return {
+      finishReason: 'length',
+      message: (msg.content || '') + '\n\n[Response truncated due to token limit]',
+      toolCalls: null,
     };
   }
 

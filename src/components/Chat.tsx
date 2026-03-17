@@ -33,7 +33,7 @@ export default function Chat({ selectedModules }: Props) {
     if (!text || loading) return;
 
     setInput('');
-    setMessages((prev) => [...prev, { role: 'user', content: text }]);
+    setMessages([{ role: 'user', content: text }]);
     setLoading(true);
 
     try {
@@ -47,19 +47,19 @@ export default function Chat({ selectedModules }: Props) {
 
       if (!res.ok) {
         setMessages((prev) => [
-          ...prev,
+          prev[0],
           { role: 'assistant', content: `Error: ${data.error}` },
         ]);
         return;
       }
 
       setMessages((prev) => [
-        ...prev,
+        prev[0],
         { role: 'assistant', content: data.message, toolsUsed: data.toolsUsed },
       ]);
     } catch (error) {
       setMessages((prev) => [
-        ...prev,
+        prev[0],
         { role: 'assistant', content: `Error: ${(error as Error).message}` },
       ]);
     } finally {
