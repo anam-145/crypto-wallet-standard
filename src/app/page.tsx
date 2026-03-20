@@ -29,7 +29,7 @@ export default function Home() {
       .then((r) => r.json())
       .then((data) => {
         setModules(data.modules || []);
-        setSelectedModules((data.modules || []).map((m: Module) => m.id));
+        setSelectedModules([]);
       });
 
     fetch('/api/settings')

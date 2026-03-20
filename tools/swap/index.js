@@ -5,7 +5,7 @@
 
 import { ethers } from 'ethers';
 import axios from 'axios';
-import { getNetwork } from '../../config/networks.js';
+import { getNetwork, priceUrl } from '../../config/networks.js';
 import { UNISWAP_QUOTER_ABI, UNISWAP_ROUTER_ABI, ERC20_ABI } from '../../config/contracts.js';
 import { getEthersWallet } from '../../utils/wallet.js';
 
@@ -125,11 +125,8 @@ class SwapTool {
 
   async getEthPrice() {
     try {
-      const response = await axios.get(
-        'https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd',
-        { timeout: 5000 }
-      );
-      return response.data.ethereum.usd;
+      const response = await axios.get(priceUrl, { timeout: 5000 });
+      return response.data.price;
     } catch (error) {
       console.warn('[Swap] ETH price fetch failed, using fallback:', error.message);
       return 2000;

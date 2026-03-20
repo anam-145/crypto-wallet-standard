@@ -10,6 +10,7 @@ import { discoverTools } from './discovery';
 import { convertToOpenAITools } from './converter';
 import { executeTool } from './executor';
 import { getProvider } from '../providers';
+import { DEFAULT_SYSTEM_PROMPT } from './system-prompt';
 
 const LOGS_DIR = path.join(process.cwd(), 'logs');
 
@@ -54,6 +55,7 @@ interface ChatResult {
 
 interface AgentOptions {
   chatUrl?: string;
+  openaiApiKey?: string;
 }
 
 interface CustomAIConfig {
@@ -64,12 +66,14 @@ interface CustomAIConfig {
 
 export class Agent {
   private defaultChatUrl: string;
+  private defaultApiKey: string;
   chatUrl: string;
   mode: 'default' | 'custom-url' | 'custom-ai';
   private customAI: CustomAIConfig | null;
 
   constructor(options: AgentOptions = {}) {
-    this.defaultChatUrl = options.chatUrl || 'http://localhost:8080/api/v1/agent/chat';
+    this.defaultChatUrl = options.chatUrl || '';
+    this.defaultApiKey = options.openaiApiKey || '';
     this.chatUrl = this.defaultChatUrl;
     this.mode = 'default';
     this.customAI = null;
@@ -121,29 +125,38 @@ export class Agent {
       for (let i = 0; i < MAX_ITERATIONS; i++) {
         let result;
 
-        if (this.mode === 'custom-ai' && this.customAI) {
-          const provider = getProvider(this.customAI.provider);
+        if (this.mode === 'default' || (this.mode === 'custom-ai' && this.customAI)) {
+          const apiKey = this.mode === 'default' ? this.defaultApiKey : this.customAI!.apiKey;
+          const systemPrompt = this.mode === 'default' ? DEFAULT_SYSTEM_PROMPT : this.customAI!.systemPrompt;
+          const providerName = this.mode === 'default' ? 'openai' : this.customAI!.provider;
+
+          if (!apiKey) {
+            throw new Error('OPENAI_API_KEY is not configured');
+          }
+
+          const provider = getProvider(providerName);
           const providerReq = {
             messages,
             tools: tools.length > 0 ? tools : [],
-            apiKey: this.customAI.apiKey,
-            systemPrompt: this.customAI.systemPrompt,
+            apiKey,
+            systemPrompt,
           };
 
-          console.log(`[Agent] Loop ${i + 1} → ${this.customAI.provider} Direct (messages: ${messages.length})`);
-          flog.json(`[Agent] Loop ${i + 1} → ${this.customAI.provider} REQUEST`, { ...providerReq, apiKey: '***' });
+          console.log(`[Agent] Loop ${i + 1} → ${providerName} Direct (messages: ${messages.length})`);
+          flog.json(`[Agent] Loop ${i + 1} → ${providerName} REQUEST`, { ...providerReq, apiKey: '***' });
 
           result = await provider.chat(providerReq);
 
-          flog.json(`[Agent] Loop ${i + 1} ← ${this.customAI.provider} RESPONSE`, result);
+          flog.json(`[Agent] Loop ${i + 1} ← ${providerName} RESPONSE`, result);
         } else {
+          // custom-url mode: proxy to external backend
           const requestBody = {
             userUniqueValue: USER_UNIQUE_VALUE,
             messages,
             tools: tools.length > 0 ? tools : [],
           };
 
-          console.log(`[Agent] Loop ${i + 1} → Backend (messages: ${messages.length})`);
+          console.log(`[Agent] Loop ${i + 1} → Backend ${this.chatUrl} (messages: ${messages.length})`);
           flog.json(`[Agent] Loop ${i + 1} → Backend REQUEST`, requestBody);
 
           const res = await fetch(this.chatUrl, {

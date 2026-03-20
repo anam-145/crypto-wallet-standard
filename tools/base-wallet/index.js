@@ -9,8 +9,6 @@ import { getNetwork } from '../../config/networks.js';
 import { ERC20_ABI } from '../../config/contracts.js';
 import { deriveEthereumWallet } from '../../utils/wallet.js';
 
-const BASESCAN_API_KEY = process.env.BASESCAN_API_KEY || '';
-
 class BaseWallet {
   constructor() {
     this.network = getNetwork('base');
@@ -56,7 +54,7 @@ class BaseWallet {
 
   async getOwnedTokens(address, maxTokens = 50) {
     try {
-      const url = `https://api.etherscan.io/v2/api?chainid=84532&module=account&action=tokentx&address=${address}&startblock=0&endblock=99999999&sort=desc&apikey=${BASESCAN_API_KEY}`;
+      const url = `${this.network.scanUrl}?module=account&action=tokentx&address=${address}&startblock=0&endblock=99999999&sort=desc`;
       const response = await axios.get(url);
       const data = response.data;
 

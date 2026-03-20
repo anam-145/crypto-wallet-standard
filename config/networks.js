@@ -1,18 +1,19 @@
 /**
  * Network Configuration
  * 2 Chains: Ethereum, Base (All Testnet)
+ * RPC calls are proxied through the CWP Proxy Server.
  */
 
-const ALCHEMY_KEY = process.env.ALCHEMY_API_KEY || '';
-const ALCHEMY_BASE_KEY = process.env.ALCHEMY_BASE_API_KEY || '';
+const API_URL = 'https://api.anamwallet.io';
 
 export const networks = {
   // Ethereum Sepolia (L1 Testnet)
   ethereum: {
     name: 'Ethereum Sepolia',
     chainId: 11155111,
-    rpcUrl: `https://eth-sepolia.g.alchemy.com/v2/${ALCHEMY_KEY}`,
+    rpcUrl: `${API_URL}/rpc/ethereum`,
     explorerUrl: 'https://sepolia.etherscan.io',
+    scanUrl: `${API_URL}/scan/ethereum`,
     nativeCurrency: { name: 'Ethereum', symbol: 'ETH', decimals: 18 },
     contracts: {
       uniswapRouter: '0x3bFA4769FB09eefC5a80d6E87c3B9C650f7Ae48E',
@@ -26,8 +27,9 @@ export const networks = {
   base: {
     name: 'Base Sepolia',
     chainId: 84532,
-    rpcUrl: `https://base-sepolia.g.alchemy.com/v2/${ALCHEMY_BASE_KEY}`,
+    rpcUrl: `${API_URL}/rpc/base`,
     explorerUrl: 'https://sepolia.basescan.org',
+    scanUrl: `${API_URL}/scan/base`,
     nativeCurrency: { name: 'Ethereum', symbol: 'ETH', decimals: 18 },
     contracts: {
       uniswapRouter: '0x050E797f3625EC8785265e1d9BDd4799b97528A1',
@@ -37,6 +39,8 @@ export const networks = {
     }
   }
 };
+
+export const priceUrl = `${API_URL}/price/eth`;
 
 export function getNetwork(chainName) {
   return networks[chainName] || null;

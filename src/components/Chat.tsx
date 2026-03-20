@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import Markdown from 'react-markdown';
+import ToolFlowBar from './ToolFlowBar';
 
 interface ToolUsed {
   name: string;
@@ -125,37 +127,32 @@ export default function Chat({ selectedModules, connected, onSessionEnd, onResta
               lineHeight: 1.5,
               wordBreak: 'break-word',
               overflowWrap: 'break-word',
-              whiteSpace: 'pre-wrap',
             }}>
-              {msg.content}
+              {msg.role === 'assistant' ? (
+                <Markdown
+                  components={{
+                    a: ({ href, children }) => (
+                      <a href={href} target="_blank" rel="noopener noreferrer" style={{ color: '#60a5fa', textDecoration: 'underline' }}>
+                        {children}
+                      </a>
+                    ),
+                    p: ({ children }) => <p style={{ margin: '4px 0' }}>{children}</p>,
+                    ul: ({ children }) => <ul style={{ margin: '4px 0', paddingLeft: 16 }}>{children}</ul>,
+                    ol: ({ children }) => <ol style={{ margin: '4px 0', paddingLeft: 16 }}>{children}</ol>,
+                    li: ({ children }) => <li style={{ margin: '2px 0' }}>{children}</li>,
+                    strong: ({ children }) => <strong style={{ fontWeight: 600 }}>{children}</strong>,
+                  }}
+                >
+                  {msg.content}
+                </Markdown>
+              ) : (
+                msg.content
+              )}
             </div>
 
-            {/* Tool badges */}
+            {/* Tool flow bar */}
             {msg.toolsUsed && msg.toolsUsed.length > 0 && (
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 4 }}>
-                {msg.toolsUsed.map((t, j) => (
-                  <div key={j} style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: 4,
-                    padding: '3px 8px',
-                    borderRadius: 6,
-                    background: '#161616',
-                    border: '1px solid #2a2a2a',
-                    fontSize: 11,
-                    color: '#888',
-                    width: 'fit-content',
-                  }}>
-                    <div style={{
-                      width: 6,
-                      height: 6,
-                      borderRadius: '50%',
-                      background: t.success ? '#34d399' : '#f87171',
-                    }} />
-                    {t.name} ({t.responseTime}ms)
-                  </div>
-                ))}
-              </div>
+              <ToolFlowBar tools={msg.toolsUsed} />
             )}
           </div>
         ))}
