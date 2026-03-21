@@ -2,7 +2,13 @@
 
 ## What This Project Is
 
-A standard interface for AI applications to use crypto wallets as in-process JS modules. Private keys never leave the host process. Modules are auto-discovered via manifest files and converted to any LLM's function-calling format at runtime.
+This repository contains two things:
+
+1. **The CWP Standard** — a universal interface specification for AI applications to discover and use crypto wallets as in-process JS modules. Defines the manifest schema, runtime interface (`discoverTools`, `convertToOpenAITools`, `executeTool`), and security model (`riskLevel`, single-module default, single-turn default).
+
+2. **A Reference Implementation** — a chat-based AI wallet agent demonstrating the standard with real on-chain execution. The chat UI is one possible frontend; any AI application (CLI, browser extension, multi-agent system) can implement the CWP runtime and use the same wallet modules.
+
+Private keys never leave the host process. Modules are auto-discovered via manifest files and converted to any LLM's function-calling format at runtime.
 
 ## Problem
 

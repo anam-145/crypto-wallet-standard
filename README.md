@@ -4,6 +4,13 @@ A universal interface for AI applications to discover and use crypto wallets as 
 
 Search moved from typing keywords to having conversations. Wallets will follow the same path — no more navigating UIs to swap, bridge, or send. Just tell the agent what you want. CWP is the standard that makes this possible, securely.
 
+This repository contains two things:
+
+1. **The CWP Standard** — manifest schema, runtime interface (discovery, conversion, execution), security model (riskLevel, single-module default, single-turn default)
+2. **A Reference Implementation** — a chat-based AI wallet agent that demonstrates the standard with real on-chain execution on Ethereum and Base Sepolia testnets
+
+The chat UI is one possible frontend built on the standard. Any AI application — CLI agent, browser extension, mobile app, multi-agent system — can implement the CWP runtime and use the same wallet modules.
+
 Built for [The Synthesis](https://synthesis.md/) hackathon — **Agents that Pay** track.
 
 ---
