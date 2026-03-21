@@ -1,15 +1,12 @@
 /**
  * Executor - Local tool execution
  *
- * Dynamically imports and executes tools/{name}/index.js.
+ * Loads tool instances from the static registry and executes actions.
  */
 
-import path from 'path';
 import { parseFunctionName } from './converter';
 import { discoverTools } from './discovery';
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const toolInstances: Record<string, any> = {};
+import { getToolInstance } from './tool-registry';
 
 export interface ToolResult {
   success: boolean;
@@ -21,23 +18,6 @@ export interface ToolResult {
 }
 
 /**
- * Dynamically load a tool module
- */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function loadTool(toolDir: string): Promise<any> {
-  if (!toolInstances[toolDir]) {
-    try {
-      const toolPath = path.join(process.cwd(), 'tools', toolDir, 'index.js');
-      const module = await import(/* webpackIgnore: true */ toolPath);
-      toolInstances[toolDir] = module.default;
-    } catch (error) {
-      throw new Error(`Failed to load tool: ${toolDir} - ${(error as Error).message}`);
-    }
-  }
-  return toolInstances[toolDir];
-}
-
-/**
  * Execute a tool action
  */
 export async function executeTool(functionName: string, args: Record<string, unknown>): Promise<ToolResult> {
@@ -45,7 +25,7 @@ export async function executeTool(functionName: string, args: Record<string, unk
   const { toolDir, action } = parseFunctionName(functionName);
 
   try {
-    const tool = await loadTool(toolDir);
+    const tool = getToolInstance(toolDir);
 
     if (typeof tool[action] !== 'function') {
       throw new Error(`Action not found: ${action} in ${toolDir}`);
@@ -58,6 +38,7 @@ export async function executeTool(functionName: string, args: Record<string, unk
     return { success: true, data: result, responseTime, tool: toolDir, action };
   } catch (error) {
     const responseTime = Date.now() - startTime;
+    console.error(`[Executor] FAIL ${toolDir}.${action}:`, (error as Error).message);
     return { success: false, error: (error as Error).message, responseTime, tool: toolDir, action };
   }
 }
