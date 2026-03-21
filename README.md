@@ -211,7 +211,18 @@ The manifest is the contract between a wallet module and the CWP runtime. It dec
 }
 ```
 
-The runtime converter transforms this into OpenAI/Claude/Gemini format at runtime. Module developers never need to know which LLM is being used.
+The runtime converter transforms this LLM-neutral manifest into the target LLM's tool-calling format. Module developers write the manifest once — the runtime handles the rest.
+
+### LLM Provider Support
+
+| Provider | Status | What's needed |
+|----------|--------|---------------|
+| **OpenAI** (GPT-4o) | Supported | — |
+| **Anthropic** (Claude) | Interface ready | Add Claude Messages API converter |
+| **Google** (Gemini) | Planned | Add Gemini function declaration converter |
+| Others | Planned | Implement the provider interface (`chat()` method) |
+
+Currently, the Custom AI mode supports OpenAI only. Adding a new LLM provider requires implementing a single `chat()` function that maps our internal format to the provider's API — the manifest and tool modules remain unchanged.
 
 ---
 

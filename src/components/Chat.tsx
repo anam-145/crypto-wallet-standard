@@ -29,6 +29,25 @@ interface Props {
   sessionDone: boolean;
 }
 
+function friendlyError(msg: string): string {
+  if (msg.includes('401') || msg.includes('Incorrect API key')) {
+    return 'Invalid API key. Please check your key in Settings and try again.';
+  }
+  if (msg.includes('429') || msg.includes('rate limit')) {
+    return 'Rate limit reached. Please wait a moment and try again.';
+  }
+  if (msg.includes('Failed to parse URL') || msg.includes('Invalid URL')) {
+    return 'Invalid backend URL. Please check the URL in Settings.';
+  }
+  if (msg.includes('fetch failed') || msg.includes('ECONNREFUSED')) {
+    return 'Cannot reach the server. Please check your connection and try again.';
+  }
+  if (msg.includes('OPENAI_API_KEY is not configured')) {
+    return 'OpenAI API key is not set. Switch to Custom AI mode and enter your key, or configure the server.';
+  }
+  return msg;
+}
+
 export default function Chat({ selectedModules, connected, onSessionEnd, onRestart, sessionDone }: Props) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
@@ -100,13 +119,13 @@ export default function Chat({ selectedModules, connected, onSessionEnd, onResta
       const data = await res.json();
 
       if (!res.ok) {
-        setMessages((prev) => [...prev, { role: 'assistant', content: `Error: ${data.error}` }]);
+        setMessages((prev) => [...prev, { role: 'assistant', content: friendlyError(data.error) }]);
         onSessionEnd();
       } else {
         handleResponse(data);
       }
     } catch (error) {
-      setMessages((prev) => [...prev, { role: 'assistant', content: `Error: ${(error as Error).message}` }]);
+      setMessages((prev) => [...prev, { role: 'assistant', content: friendlyError((error as Error).message) }]);
       onSessionEnd();
     } finally {
       setLoading(false);
@@ -134,13 +153,13 @@ export default function Chat({ selectedModules, connected, onSessionEnd, onResta
       const data = await res.json();
 
       if (!res.ok) {
-        setMessages((prev) => [...prev, { role: 'assistant', content: `Error: ${data.error}` }]);
+        setMessages((prev) => [...prev, { role: 'assistant', content: friendlyError(data.error) }]);
         onSessionEnd();
       } else {
         handleResponse(data);
       }
     } catch (error) {
-      setMessages((prev) => [...prev, { role: 'assistant', content: `Error: ${(error as Error).message}` }]);
+      setMessages((prev) => [...prev, { role: 'assistant', content: friendlyError((error as Error).message) }]);
       onSessionEnd();
     } finally {
       setLoading(false);
@@ -457,7 +476,7 @@ export default function Chat({ selectedModules, connected, onSessionEnd, onResta
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSend()}
-              placeholder={continuing ? 'Ask a follow-up...' : connected ? 'Enter your message...' : 'Connect first to start'}
+              placeholder={continuing ? 'Ask a follow-up...' : connected ? 'Enter your message...' : 'Select a module to start'}
               disabled={!connected || loading}
               style={{
                 flex: 1,

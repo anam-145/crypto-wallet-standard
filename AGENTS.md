@@ -70,6 +70,10 @@ Each module declares its capabilities in `manifest.json`. The format is LLM-neut
 }
 ```
 
+## LLM Provider Support
+
+The manifest format is LLM-neutral. The runtime converter transforms it into the target provider's format. Currently OpenAI (GPT-4o) is supported. Adding a new provider (Claude, Gemini, etc.) requires implementing a single `chat()` function — manifests and tool modules remain unchanged.
+
 ## Security Model
 
 CWP uses a **secure-by-default, opt-out-with-consent** design.

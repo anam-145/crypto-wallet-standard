@@ -5,6 +5,7 @@ import Chat from '@/components/Chat';
 import ModuleSelector from '@/components/ModuleSelector';
 import SettingsPanel from '@/components/SettingsPanel';
 import StatusBar from '@/components/StatusBar';
+import Welcome from '@/components/Welcome';
 
 interface Module {
   id: string;
@@ -23,6 +24,7 @@ export default function Home() {
   const [availableProviders, setAvailableProviders] = useState<string[]>([]);
   const [sessionDone, setSessionDone] = useState(false);
   const [connectedDetail, setConnectedDetail] = useState('');
+  const [showWelcome, setShowWelcome] = useState(true);
 
   useEffect(() => {
     fetch('/api/modules')
@@ -99,45 +101,52 @@ export default function Home() {
       overflow: 'hidden',
       border: '1px solid #222',
     }}>
-      {/* Header */}
-      <div style={{
-        padding: '20px 24px 16px',
-        borderBottom: '1px solid #1a1a1a',
-      }}>
-        <h1 style={{ fontSize: 18, fontWeight: 600, color: '#fff', marginBottom: 16 }}>
-          Crypto Wallet Agent
-        </h1>
-        <SettingsPanel
-          currentMode={mode}
-          onModeChange={handleModeChange}
-          onApply={handleApplySettings}
-          availableProviders={availableProviders}
-        />
-      </div>
+      {showWelcome ? (
+        <Welcome onStart={() => setShowWelcome(false)} />
+      ) : (
+        <>
+          {/* Header */}
+          <div style={{
+            padding: '20px 24px 16px',
+            borderBottom: '1px solid #1a1a1a',
+          }}>
+            <h1 style={{ fontSize: 18, fontWeight: 600, color: '#fff', marginBottom: 16 }}>
+              Crypto Wallet Agent
+            </h1>
+            <SettingsPanel
+              currentMode={mode}
+              onModeChange={handleModeChange}
+              onApply={handleApplySettings}
+              availableProviders={availableProviders}
+            />
+          </div>
 
-      {/* Modules */}
-      <ModuleSelector
-        modules={modules}
-        selected={selectedModules}
-        onToggle={handleToggle}
-        disabled={sessionDone}
-      />
+          {/* Modules */}
+          <ModuleSelector
+            modules={modules}
+            selected={selectedModules}
+            onToggle={handleToggle}
+            disabled={sessionDone}
+          />
 
-      {/* Status Bar */}
-      <StatusBar
-        mode={mode}
-        connected={connected}
-        connectedDetail={connectedDetail}
-      />
+          {/* Status Bar */}
+          <StatusBar
+            mode={mode}
+            connected={connected}
+            connectedDetail={connectedDetail}
+            selectedModuleCount={selectedModules.length}
+          />
 
-      {/* Chat */}
-      <Chat
-        selectedModules={selectedModules}
-        connected={connected}
-        sessionDone={sessionDone}
-        onSessionEnd={() => setSessionDone(true)}
-        onRestart={() => setSessionDone(false)}
-      />
+          {/* Chat */}
+          <Chat
+            selectedModules={selectedModules}
+            connected={connected && selectedModules.length > 0}
+            sessionDone={sessionDone}
+            onSessionEnd={() => setSessionDone(true)}
+            onRestart={() => setSessionDone(false)}
+          />
+        </>
+      )}
     </div>
   );
 }
