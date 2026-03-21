@@ -128,7 +128,7 @@ The security principles (single-module default, riskLevel enforcement, single-tu
 ## Run
 
 ```bash
-git clone https://github.com/anam145/crypto-wallet-standard.git
+git clone https://github.com/anam-145/crypto-wallet-standard.git
 cd crypto-wallet-standard
 npm install
 # Set OPENAI_API_KEY and MNEMONIC in .env.local
@@ -146,4 +146,4 @@ Next.js 16, TypeScript, React 19, ethers.js 5, Uniswap V3 (SwapRouter02 + Quoter
 
 ## Hackathon
 
-The Synthesis — **Agents that Pay** track. ERC-8004 on-chain identity registered on Base Mainnet.
+The Synthesis — **Synthesis Open Track**, **Agents that Pay**, and **Agentic Finance (Uniswap)** tracks. ERC-8004 on-chain identity registered on Base Mainnet.

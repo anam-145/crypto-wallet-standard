@@ -11,7 +11,7 @@ This repository contains two things:
 
 The chat UI is one possible frontend built on the standard. Any AI application — CLI agent, browser extension, mobile app, multi-agent system — can implement the CWP runtime and use the same wallet modules.
 
-Built for [The Synthesis](https://synthesis.md/) hackathon — **Agents that Pay** track.
+Built for [The Synthesis](https://synthesis.md/) hackathon — **Synthesis Open Track**, **Agents that Pay**, and **Agentic Finance (Uniswap)** tracks.
 
 ---
 
@@ -287,7 +287,7 @@ The key insight: **security relaxation is always initiated by the user, never by
 ### Install & Run
 
 ```bash
-git clone https://github.com/anam145/crypto-wallet-standard.git
+git clone https://github.com/anam-145/crypto-wallet-standard.git
 cd crypto-wallet-standard
 npm install
 ```
