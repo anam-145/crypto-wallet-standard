@@ -29,11 +29,16 @@ class FileLogger {
   }
 
   save() {
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-    if (!fs.existsSync(LOGS_DIR)) fs.mkdirSync(LOGS_DIR, { recursive: true });
-    const filePath = path.join(LOGS_DIR, `${timestamp}.log`);
-    fs.writeFileSync(filePath, this.lines.join('\n'), 'utf-8');
-    console.log(`[Agent] Log saved: logs/${path.basename(filePath)}`);
+    try {
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+      if (!fs.existsSync(LOGS_DIR)) fs.mkdirSync(LOGS_DIR, { recursive: true });
+      const filePath = path.join(LOGS_DIR, `${timestamp}.log`);
+      fs.writeFileSync(filePath, this.lines.join('\n'), 'utf-8');
+      console.log(`[Agent] Log saved: logs/${path.basename(filePath)}`);
+    } catch {
+      // Read-only filesystem (e.g. Vercel) — skip file logging
+      console.log(`[Agent] Log: ${this.lines.length} lines (file save skipped)`);
+    }
   }
 }
 
