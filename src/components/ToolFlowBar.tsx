@@ -58,10 +58,10 @@ export default function ToolFlowBar({ tools }: Props) {
           flexShrink: 0,
         }} />
         <span style={{ color: '#777' }}>
-          {tools.map(t => formatName(t.name)).join(' → ')}
+          {tools.length} tools executed
         </span>
-        <span style={{ color: '#555', marginLeft: 2 }}>
-          {tools.length} tools, {formatTime(totalTime)}
+        <span style={{ color: '#555' }}>
+          ({formatTime(totalTime)})
         </span>
         <svg
           width="10"
@@ -87,7 +87,7 @@ export default function ToolFlowBar({ tools }: Props) {
         <div style={{
           display: 'flex',
           flexDirection: 'column',
-          gap: 3,
+          gap: 0,
           marginTop: 6,
           padding: '8px 10px',
           borderRadius: 8,
@@ -95,21 +95,27 @@ export default function ToolFlowBar({ tools }: Props) {
           border: '1px solid #2a2a2a',
         }}>
           {tools.map((t, i) => (
-            <div key={i} style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 6,
-              fontSize: 11,
-            }}>
+            <div key={i}>
               <div style={{
-                width: 5,
-                height: 5,
-                borderRadius: '50%',
-                background: t.success ? '#34d399' : '#f87171',
-                flexShrink: 0,
-              }} />
-              <span style={{ color: '#999', flex: 1 }}>{t.name}</span>
-              <span style={{ color: '#555' }}>{formatTime(t.responseTime)}</span>
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+                fontSize: 11,
+                padding: '3px 0',
+              }}>
+                <div style={{
+                  width: 5,
+                  height: 5,
+                  borderRadius: '50%',
+                  background: t.success ? '#34d399' : '#f87171',
+                  flexShrink: 0,
+                }} />
+                <span style={{ color: '#999', flex: 1 }}>{formatName(t.name)}</span>
+                <span style={{ color: '#555' }}>{formatTime(t.responseTime)}</span>
+              </div>
+              {i < tools.length - 1 && (
+                <div style={{ paddingLeft: 2, color: '#333', fontSize: 10, lineHeight: 1 }}>↓</div>
+              )}
             </div>
           ))}
         </div>

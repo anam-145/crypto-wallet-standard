@@ -3,16 +3,20 @@ import { agent } from '@/lib/agent/singleton';
 
 export async function POST(req: NextRequest) {
   try {
-    const { message, modules, history } = await req.json();
+    const { modules, history, pendingToolCall } = await req.json();
 
-    if (!message || typeof message !== 'string') {
+    if (!pendingToolCall || !history) {
       return NextResponse.json(
-        { error: 'message is required' },
+        { error: 'pendingToolCall and history are required' },
         { status: 400 },
       );
     }
 
-    const result = await agent.chat(message, modules || [], history || []);
+    const result = await agent.executeConfirmed(
+      modules || [],
+      history,
+      pendingToolCall,
+    );
     return NextResponse.json(result);
   } catch (error) {
     return NextResponse.json(

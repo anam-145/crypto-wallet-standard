@@ -11,9 +11,14 @@ interface ToolUsed {
 }
 
 interface Message {
-  role: 'user' | 'assistant';
+  role: 'user' | 'assistant' | 'confirmation';
   content: string;
   toolsUsed?: ToolUsed[];
+}
+
+interface PendingToolCall {
+  name: string;
+  arguments: Record<string, unknown>;
 }
 
 interface Props {
@@ -28,56 +33,156 @@ export default function Chat({ selectedModules, connected, onSessionEnd, onResta
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [llmHistory, setLlmHistory] = useState<any[]>([]);
+  const [continuing, setContinuing] = useState(false);
+  const [pendingToolCall, setPendingToolCall] = useState<PendingToolCall | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, loading]);
+  }, [messages, loading, pendingToolCall]);
+
+  function handleResponse(data: { message: string; toolsUsed?: ToolUsed[]; history?: unknown[]; needsConfirmation?: boolean; pendingToolCall?: PendingToolCall }) {
+    if (data.history) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      setLlmHistory(data.history as any[]);
+    }
+
+    if (data.needsConfirmation && data.pendingToolCall) {
+      setPendingToolCall(data.pendingToolCall);
+      // Show confirmation message
+      const args = data.pendingToolCall.arguments;
+      const argsStr = Object.entries(args).map(([k, v]) => `${k}: ${v}`).join(', ');
+      setMessages((prev) => [
+        ...prev,
+        { role: 'confirmation' as const, content: `**${data.pendingToolCall!.name}** requires confirmation.\n\n${argsStr}`, toolsUsed: data.toolsUsed },
+      ]);
+      setLoading(false);
+      return;
+    }
+
+    setMessages((prev) => [
+      ...prev,
+      { role: 'assistant', content: data.message, toolsUsed: data.toolsUsed },
+    ]);
+    setPendingToolCall(null);
+    onSessionEnd();
+  }
 
   async function handleSend() {
     const text = input.trim();
-    if (!text || loading || !connected || sessionDone) return;
+    if (!text || loading || !connected) return;
 
     setInput('');
-    setMessages([{ role: 'user', content: text }]);
+
+    if (continuing) {
+      setMessages((prev) => [...prev, { role: 'user', content: text }]);
+      setContinuing(false);
+    } else {
+      setMessages([{ role: 'user', content: text }]);
+      setLlmHistory([]);
+    }
+
     setLoading(true);
 
     try {
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: text, modules: selectedModules }),
+        body: JSON.stringify({
+          message: text,
+          modules: selectedModules,
+          history: continuing ? llmHistory : [],
+        }),
       });
 
       const data = await res.json();
 
       if (!res.ok) {
-        setMessages((prev) => [
-          prev[0],
-          { role: 'assistant', content: `Error: ${data.error}` },
-        ]);
+        setMessages((prev) => [...prev, { role: 'assistant', content: `Error: ${data.error}` }]);
+        onSessionEnd();
       } else {
-        setMessages((prev) => [
-          prev[0],
-          { role: 'assistant', content: data.message, toolsUsed: data.toolsUsed },
-        ]);
+        handleResponse(data);
       }
-
-      onSessionEnd();
     } catch (error) {
-      setMessages((prev) => [
-        prev[0],
-        { role: 'assistant', content: `Error: ${(error as Error).message}` },
-      ]);
+      setMessages((prev) => [...prev, { role: 'assistant', content: `Error: ${(error as Error).message}` }]);
       onSessionEnd();
     } finally {
       setLoading(false);
     }
   }
 
+  async function handleConfirm() {
+    if (!pendingToolCall) return;
+    setLoading(true);
+
+    // Remove confirmation message
+    setMessages((prev) => prev.filter(m => m.role !== 'confirmation'));
+
+    try {
+      const res = await fetch('/api/chat/confirm', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          modules: selectedModules,
+          history: llmHistory,
+          pendingToolCall,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setMessages((prev) => [...prev, { role: 'assistant', content: `Error: ${data.error}` }]);
+        onSessionEnd();
+      } else {
+        handleResponse(data);
+      }
+    } catch (error) {
+      setMessages((prev) => [...prev, { role: 'assistant', content: `Error: ${(error as Error).message}` }]);
+      onSessionEnd();
+    } finally {
+      setLoading(false);
+      setPendingToolCall(null);
+    }
+  }
+
+  function handleReject() {
+    // Add tool response to history so OpenAI doesn't complain about missing tool_call_id
+    if (pendingToolCall) {
+      const lastAssistant = [...llmHistory].reverse().find(m => m.tool_calls);
+      const toolCallId = lastAssistant?.tool_calls?.find(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (tc: any) => tc.function.name === pendingToolCall.name
+      )?.id || 'rejected';
+
+      setLlmHistory((prev) => [
+        ...prev,
+        { role: 'tool', tool_call_id: toolCallId, content: JSON.stringify({ error: 'Action rejected by user' }) },
+        { role: 'assistant', content: 'Action cancelled by user.' },
+      ]);
+    }
+
+    setMessages((prev) => [
+      ...prev.filter(m => m.role !== 'confirmation'),
+      { role: 'assistant', content: 'Action cancelled by user.' },
+    ]);
+    setPendingToolCall(null);
+    onSessionEnd();
+  }
+
+  function handleMore() {
+    setContinuing(true);
+    onRestart();
+  }
+
   function handleRestart() {
     setMessages([]);
     setInput('');
+    setLlmHistory([]);
+    setContinuing(false);
+    setPendingToolCall(null);
     onRestart();
   }
 
@@ -98,64 +203,139 @@ export default function Chat({ selectedModules, connected, onSessionEnd, onResta
           </div>
         )}
 
-        {messages.map((msg, i) => (
-          <div
-            key={i}
-            style={{
-              maxWidth: '85%',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 4,
-              alignSelf: msg.role === 'user' ? 'flex-end' : 'flex-start',
-            }}
-          >
-            <span style={{
-              fontSize: 11,
-              color: '#666',
-              padding: '0 4px',
-              textAlign: msg.role === 'user' ? 'right' : 'left',
-            }}>
-              {msg.role === 'user' ? 'You' : 'Agent'}
-            </span>
-            <div style={{
-              padding: '10px 14px',
-              borderRadius: 16,
-              ...(msg.role === 'user'
-                ? { background: '#4f8fff', color: '#fff', borderBottomRightRadius: 4 }
-                : { background: '#1e1e1e', color: '#e5e5e5', borderBottomLeftRadius: 4 }),
-              fontSize: 14,
-              lineHeight: 1.5,
-              wordBreak: 'break-word',
-              overflowWrap: 'break-word',
-            }}>
-              {msg.role === 'assistant' ? (
-                <Markdown
-                  components={{
-                    a: ({ href, children }) => (
-                      <a href={href} target="_blank" rel="noopener noreferrer" style={{ color: '#60a5fa', textDecoration: 'underline' }}>
-                        {children}
-                      </a>
-                    ),
-                    p: ({ children }) => <p style={{ margin: '4px 0' }}>{children}</p>,
-                    ul: ({ children }) => <ul style={{ margin: '4px 0', paddingLeft: 16 }}>{children}</ul>,
-                    ol: ({ children }) => <ol style={{ margin: '4px 0', paddingLeft: 16 }}>{children}</ol>,
-                    li: ({ children }) => <li style={{ margin: '2px 0' }}>{children}</li>,
-                    strong: ({ children }) => <strong style={{ fontWeight: 600 }}>{children}</strong>,
-                  }}
-                >
-                  {msg.content}
-                </Markdown>
-              ) : (
-                msg.content
+        {messages.map((msg, i) => {
+          if (msg.role === 'confirmation') {
+            return (
+              <div key={i} style={{
+                maxWidth: '85%',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 8,
+                alignSelf: 'flex-start',
+              }}>
+                <span style={{ fontSize: 11, color: '#666', padding: '0 4px' }}>Agent</span>
+                <div style={{
+                  padding: '12px 14px',
+                  borderRadius: 16,
+                  borderBottomLeftRadius: 4,
+                  background: '#1a1a00',
+                  border: '1px solid #f59e0b33',
+                  fontSize: 14,
+                  lineHeight: 1.5,
+                  color: '#e5e5e5',
+                  wordBreak: 'break-all',
+                }}>
+                  <Markdown
+                    components={{
+                      p: ({ children }) => <p style={{ margin: '4px 0' }}>{children}</p>,
+                      strong: ({ children }) => <strong style={{ fontWeight: 600, color: '#f59e0b' }}>{children}</strong>,
+                    }}
+                  >
+                    {msg.content}
+                  </Markdown>
+                </div>
+                {msg.toolsUsed && msg.toolsUsed.length > 0 && (
+                  <ToolFlowBar tools={msg.toolsUsed} />
+                )}
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button
+                    onClick={handleConfirm}
+                    disabled={loading}
+                    style={{
+                      padding: '7px 18px',
+                      borderRadius: 20,
+                      border: '1px solid #34d399',
+                      background: 'rgba(52, 211, 153, 0.1)',
+                      color: '#34d399',
+                      fontSize: 13,
+                      cursor: loading ? 'not-allowed' : 'pointer',
+                      opacity: loading ? 0.5 : 1,
+                      transition: 'all 0.15s',
+                    }}
+                  >
+                    Confirm
+                  </button>
+                  <button
+                    onClick={handleReject}
+                    disabled={loading}
+                    style={{
+                      padding: '7px 18px',
+                      borderRadius: 20,
+                      border: '1px solid #555',
+                      background: 'transparent',
+                      color: '#999',
+                      fontSize: 13,
+                      cursor: loading ? 'not-allowed' : 'pointer',
+                      opacity: loading ? 0.5 : 1,
+                      transition: 'all 0.15s',
+                    }}
+                  >
+                    Reject
+                  </button>
+                </div>
+              </div>
+            );
+          }
+
+          return (
+            <div
+              key={i}
+              style={{
+                maxWidth: '85%',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 4,
+                alignSelf: msg.role === 'user' ? 'flex-end' : 'flex-start',
+              }}
+            >
+              <span style={{
+                fontSize: 11,
+                color: '#666',
+                padding: '0 4px',
+                textAlign: msg.role === 'user' ? 'right' : 'left',
+              }}>
+                {msg.role === 'user' ? 'You' : 'Agent'}
+              </span>
+              <div style={{
+                padding: '10px 14px',
+                borderRadius: 16,
+                ...(msg.role === 'user'
+                  ? { background: '#4f8fff', color: '#fff', borderBottomRightRadius: 4 }
+                  : { background: '#1e1e1e', color: '#e5e5e5', borderBottomLeftRadius: 4 }),
+                fontSize: 14,
+                lineHeight: 1.5,
+                wordBreak: 'break-word',
+                overflowWrap: 'break-word',
+              }}>
+                {msg.role === 'assistant' ? (
+                  <Markdown
+                    components={{
+                      a: ({ href, children }) => (
+                        <a href={href} target="_blank" rel="noopener noreferrer" style={{ color: '#60a5fa', textDecoration: 'underline' }}>
+                          {children}
+                        </a>
+                      ),
+                      p: ({ children }) => <p style={{ margin: '4px 0' }}>{children}</p>,
+                      ul: ({ children }) => <ul style={{ margin: '4px 0', paddingLeft: 16 }}>{children}</ul>,
+                      ol: ({ children }) => <ol style={{ margin: '4px 0', paddingLeft: 16 }}>{children}</ol>,
+                      li: ({ children }) => <li style={{ margin: '2px 0' }}>{children}</li>,
+                      strong: ({ children }) => <strong style={{ fontWeight: 600 }}>{children}</strong>,
+                    }}
+                  >
+                    {msg.content}
+                  </Markdown>
+                ) : (
+                  msg.content
+                )}
+              </div>
+
+              {/* Tool flow bar */}
+              {msg.toolsUsed && msg.toolsUsed.length > 0 && (
+                <ToolFlowBar tools={msg.toolsUsed} />
               )}
             </div>
-
-            {/* Tool flow bar */}
-            {msg.toolsUsed && msg.toolsUsed.length > 0 && (
-              <ToolFlowBar tools={msg.toolsUsed} />
-            )}
-          </div>
-        ))}
+          );
+        })}
 
         {/* Loading dots */}
         {loading && (
@@ -194,18 +374,46 @@ export default function Chat({ selectedModules, connected, onSessionEnd, onResta
         <div ref={bottomRef} />
       </div>
 
-      {/* Input Area or Restart Button */}
-      {sessionDone ? (
+      {/* Input Area or Action Buttons */}
+      {sessionDone && !continuing && !pendingToolCall ? (
         <div style={{
           padding: '16px 24px 24px',
           borderTop: '1px solid #1a1a1a',
           display: 'flex',
           justifyContent: 'center',
+          gap: 8,
         }}>
+          <button
+            onClick={handleMore}
+            style={{
+              padding: '10px 24px',
+              borderRadius: 24,
+              border: '1px solid #333',
+              background: '#1a1a1a',
+              color: '#e5e5e5',
+              fontSize: 14,
+              cursor: 'pointer',
+              transition: 'all 0.15s',
+            }}
+            onMouseEnter={(e) => {
+              const el = e.target as HTMLElement;
+              el.style.borderColor = '#34d399';
+              el.style.background = 'rgba(52, 211, 153, 0.1)';
+              el.style.color = '#34d399';
+            }}
+            onMouseLeave={(e) => {
+              const el = e.target as HTMLElement;
+              el.style.borderColor = '#333';
+              el.style.background = '#1a1a1a';
+              el.style.color = '#e5e5e5';
+            }}
+          >
+            Continue
+          </button>
           <button
             onClick={handleRestart}
             style={{
-              padding: '10px 28px',
+              padding: '10px 24px',
               borderRadius: 24,
               border: '1px solid #333',
               background: '#1a1a1a',
@@ -227,10 +435,10 @@ export default function Chat({ selectedModules, connected, onSessionEnd, onResta
               el.style.color = '#e5e5e5';
             }}
           >
-            New Conversation
+            New
           </button>
         </div>
-      ) : (
+      ) : !pendingToolCall ? (
         <div style={{ padding: '16px 24px 24px', borderTop: '1px solid #1a1a1a' }}>
           <div style={{
             display: 'flex',
@@ -249,7 +457,7 @@ export default function Chat({ selectedModules, connected, onSessionEnd, onResta
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSend()}
-              placeholder={connected ? 'Enter your message...' : 'Connect first to start'}
+              placeholder={continuing ? 'Ask a follow-up...' : connected ? 'Enter your message...' : 'Connect first to start'}
               disabled={!connected || loading}
               style={{
                 flex: 1,
@@ -283,7 +491,7 @@ export default function Chat({ selectedModules, connected, onSessionEnd, onResta
             </button>
           </div>
         </div>
-      )}
+      ) : null}
     </>
   );
 }

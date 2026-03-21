@@ -6,6 +6,7 @@
     "actions": [
       {
         "name": "quote",
+        "riskLevel": "low",
         "description": "Get a swap quote. Compares all 4 Uniswap V3 fee tiers and auto-selects the pool with the best output. Use when the user asks for a swap quote, exchange rate, or expected output.",
         "input": {
           "type": "object",
@@ -30,6 +31,7 @@
       },
       {
         "name": "compare",
+        "riskLevel": "low",
         "description": "Compare swap quotes between Ethereum and Base for the same pair. Recommends the more favorable chain. Use when the user asks which chain is better for a swap.",
         "input": {
           "type": "object",
@@ -52,6 +54,7 @@
       },
       {
         "name": "execute",
+        "riskLevel": "high",
         "description": "Execute a token swap. Sends an actual transaction to exchange tokens. Use when the user explicitly requests to perform a swap.",
         "input": {
           "type": "object",

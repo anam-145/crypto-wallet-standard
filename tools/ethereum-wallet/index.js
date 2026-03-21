@@ -7,7 +7,7 @@ import { ethers } from 'ethers';
 import axios from 'axios';
 import { getNetwork } from '../../config/networks.js';
 import { ERC20_ABI } from '../../config/contracts.js';
-import { deriveEthereumWallet } from '../../utils/wallet.js';
+import { deriveEthereumWallet, getEthersWallet } from '../../utils/wallet.js';
 
 class EthereumWallet {
   constructor() {
@@ -111,6 +111,26 @@ class EthereumWallet {
     return {
       gasLimit: gasLimit.toString(),
       gasFee: ethers.utils.formatEther(gasFee),
+      chain: 'ethereum'
+    };
+  }
+
+  async sendETH(to, amount) {
+    const wallet = getEthersWallet('ethereum', this.provider);
+    const tx = await wallet.sendTransaction({
+      to,
+      value: ethers.utils.parseEther(amount),
+    });
+    const receipt = await tx.wait();
+
+    return {
+      txHash: receipt.transactionHash,
+      explorerUrl: `https://sepolia.etherscan.io/tx/${receipt.transactionHash}`,
+      status: receipt.status === 1 ? 'success' : 'failed',
+      from: wallet.address,
+      to,
+      amount,
+      gasUsed: receipt.gasUsed.toString(),
       chain: 'ethereum'
     };
   }

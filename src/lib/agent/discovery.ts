@@ -12,6 +12,7 @@ const TOOLS_DIR = path.join(process.cwd(), 'tools');
 export interface ManifestAction {
   name: string;
   description: string;
+  riskLevel?: 'low' | 'high';
   input?: {
     type: string;
     required?: string[];

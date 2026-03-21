@@ -83,3 +83,14 @@ function getOrderedArgs(toolDir: string, actionName: string, args: Record<string
 
   return Object.values(args);
 }
+
+/**
+ * Check if a tool action is high risk
+ */
+export function isHighRisk(functionName: string): boolean {
+  const { toolDir, action } = parseFunctionName(functionName);
+  const manifests = discoverTools();
+  const manifest = manifests.find(m => m._toolDir === toolDir);
+  const actionDef = manifest?.aiTools?.actions?.find(a => a.name === action);
+  return actionDef?.riskLevel === 'high';
+}

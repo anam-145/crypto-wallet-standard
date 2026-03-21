@@ -113,6 +113,29 @@
         }
       },
       {
+        "name": "sendETH",
+        "riskLevel": "high",
+        "description": "Send ETH to another address. Use when the user wants to transfer ETH to someone.",
+        "input": {
+          "type": "object",
+          "required": ["to", "amount"],
+          "properties": {
+            "to": { "type": "string", "description": "Recipient address (0x...)" },
+            "amount": { "type": "string", "description": "ETH amount to send" }
+          }
+        },
+        "output": {
+          "type": "object",
+          "properties": {
+            "txHash": { "type": "string", "description": "Transaction hash" },
+            "explorerUrl": { "type": "string", "description": "Block explorer link" },
+            "status": { "type": "string", "description": "Transaction status (success/failed)" },
+            "amount": { "type": "string", "description": "Amount sent" },
+            "gasUsed": { "type": "string", "description": "Gas used" }
+          }
+        }
+      },
+      {
         "name": "getTransactionStatus",
         "description": "Get the current status and confirmation count for a transaction hash.",
         "input": {
