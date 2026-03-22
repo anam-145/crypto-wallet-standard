@@ -107,7 +107,8 @@ crypto-wallet-standard/
 │   │   ├── agent/                  # Agent core
 │   │   │   ├── discovery.ts        #   Scan tools/*/manifest.json (cached)
 │   │   │   ├── converter.ts        #   Manifest → OpenAI function calling format
-│   │   │   ├── executor.ts         #   Dynamic import + execution + riskLevel check
+│   │   │   ├── executor.ts         #   Tool execution + riskLevel check
+│   │   │   ├── tool-registry.ts    #   Static tool registry (build-time imports)
 │   │   │   ├── index.ts            #   Agent loop (LLM → tool_calls → execute → repeat)
 │   │   │   ├── singleton.ts        #   HMR-safe singleton
 │   │   │   └── system-prompt.ts    #   Security constraints
@@ -319,9 +320,10 @@ Open `http://localhost:3000`, select modules, and start chatting.
 
 1. Create `tools/your-module/manifest.json` with action schemas and riskLevel
 2. Create `tools/your-module/index.js` with a default-exported class
-3. Restart the app — the agent discovers it automatically
+3. Register the module in `src/lib/agent/tool-registry.ts` (one import + one registry entry)
+4. Restart the app — the agent discovers it automatically
 
-No changes needed in agent core, API routes, or frontend.
+The manifest and runtime interface are standardized. In a production CWP runtime with dynamic module loading, step 3 would be unnecessary — modules would be fully plug-and-play.
 
 ---
 

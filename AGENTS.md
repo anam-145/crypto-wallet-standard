@@ -138,7 +138,7 @@ npm run dev
 
 ## Adding a Module
 
-Create a folder in `tools/` with `manifest.json` + `index.js`. The agent discovers it automatically on next request. No changes to agent core, API routes, or frontend required.
+Create a folder in `tools/` with `manifest.json` + `index.js`, then register it in `src/lib/agent/tool-registry.ts` (one import + one registry entry). The agent discovers the manifest automatically. In a production CWP runtime with dynamic module loading, the registry step would be unnecessary.
 
 ## Tech Stack
 
